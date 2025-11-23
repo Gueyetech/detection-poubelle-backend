@@ -1,0 +1,12 @@
+services:
+  # Service FastAPI avec Docker
+  - type: web
+    name: detection-poubelle-api
+    runtime: docker
+    region: frankfurt
+    plan: free
+    branch: main
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: PORT
+        value: 8000

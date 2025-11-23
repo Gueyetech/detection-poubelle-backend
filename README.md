@@ -97,7 +97,25 @@ Le modèle YOLOv8 (`best.pt`) doit être présent dans le répertoire ou sera t�
 3. **Déployez** en sélectionnant votre repository
 4. **Fichier principal** : `streamlit_app.py`
 
-### Déploiement sur Render (API FastAPI)
+### Déploiement sur Render (Interface + API)
+
+**Option 1 : Déploiement automatique avec Blueprint** ⭐
+
+1. Créez un compte sur [Render](https://render.com)
+2. Allez sur Dashboard → "New" → "Blueprint"
+3. Connectez votre repository GitHub
+4. Render détectera automatiquement `render.yaml` et créera les 2 services :
+   - Application Streamlit
+   - API FastAPI
+
+**Option 2 : Déploiement manuel**
+
+Consultez le guide détaillé : [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md)
+
+**URLs après déploiement :**
+- Streamlit : `https://detection-poubelle-streamlit.onrender.com`
+- API : `https://detection-poubelle-api.onrender.com`
+- API Docs : `https://detection-poubelle-api.onrender.com/docs`
 
 **Build Command:**
 ```bash
