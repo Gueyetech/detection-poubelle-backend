@@ -25,16 +25,17 @@ RESULTS_DIR.mkdir(exist_ok=True)
 # Titre principal
 st.title("Détection de Poubelles Pleines/Vides")
 
-# Sidebar
+
 with st.sidebar:
     st.header("À propos")
     st.info("""
     Cette application utilise **YOLOv8** pour détecter si une poubelle est pleine ou vide.
     
     **Instructions:**
-    1. Téléchargez une image
-    2. Ou utilisez votre webcam
-    3. Consultez les résultats
+    1. Téléchargez une image depuis votre appareil
+    2. Utilisez l'appareil photo de votre téléphone/webcam
+    3. Analysez une vidéo
+    4. Consultez les résultats de détection
     """)
     
 
@@ -48,10 +49,8 @@ with st.sidebar:
     except Exception as e:
         st.error(f"Erreur: {str(e)}")
 
-# Tabs principales
-tab1, tab2, tab3 = st.tabs(["Image", "Vidéo", "Webcam"])
+tab1, tab2, tab3 = st.tabs(["Image", "Vidéo", "Appareil Photo"])
 
-# Tab 1: Upload d'image
 with tab1:
     st.subheader("Téléchargez une image")
     
@@ -64,16 +63,13 @@ with tab1:
     col1, col2 = st.columns(2)
     
     if uploaded_file is not None:
-        # Afficher l'image originale
         with col1:
-            st.markdown("### 📥 Image Originale")
+            st.markdown("###  Image Originale")
             image = Image.open(uploaded_file)
             st.image(image, use_container_width=True)
         
-        # Analyse automatique
         with st.spinner("Analyse en cours..."):
             try:
-                # Sauvegarder temporairement
                 import uuid
                 prediction_id = str(uuid.uuid4())
                 file_path = UPLOAD_DIR / f"{prediction_id}_{uploaded_file.name}"
@@ -81,20 +77,18 @@ with tab1:
                 with open(file_path, "wb") as f:
                     f.write(uploaded_file.getbuffer())
                 
-                # Prédiction
+                
                 result = predict_image_model(str(file_path), str(RESULTS_DIR), prediction_id)
                 
-                # Afficher l'image annotée
                 with col2:
-                    st.markdown("### 🎯 Résultats de Détection")
+                    st.markdown("###  Résultats de Détection")
                     annotated_path = RESULTS_DIR / f"{prediction_id}_annotated.jpg"
                     if annotated_path.exists():
                         annotated_image = Image.open(annotated_path)
                         st.image(annotated_image, use_container_width=True)
                 
-                # Afficher les statistiques
                 st.markdown("---")
-                st.subheader("📊 Statistiques")
+                st.subheader(" Statistiques")
                 
                 summary = result["summary"]
                 
@@ -102,7 +96,6 @@ with tab1:
                 with metric_cols[0]:
                     st.metric("Total Détections", summary["total_detections"])
                 
-                # Afficher par classe
                 for idx, (class_name, count) in enumerate(summary["class_counts"].items(), 1):
                     with metric_cols[idx % 3]:
                         st.metric(
@@ -113,7 +106,7 @@ with tab1:
                 
                 # Détails des détections
                 if result["detections"]:
-                    st.markdown("### 🔍 Détails des Détections")
+                    st.markdown("###  Détails des Détections")
                     for i, detection in enumerate(result["detections"], 1):
                         class_name = detection["class"]
                         confidence = detection["confidence"]
@@ -124,10 +117,10 @@ with tab1:
                             st.write(f"**Confiance:** {confidence:.1%}")
                             st.write(f"**Coordonnées:** [{bbox[0]:.0f}, {bbox[1]:.0f}, {bbox[2]:.0f}, {bbox[3]:.0f}]")
                 
-                st.success("✅ Analyse terminée avec succès!")
+                st.success("Analyse terminée avec succès!")
                 
             except Exception as e:
-                st.error(f"❌ Erreur lors de l'analyse: {str(e)}")
+                st.error(f"Erreur lors de l'analyse: {str(e)}")
 
 # Tab 2: Upload de vidéo
 with tab2:
@@ -143,13 +136,11 @@ with tab2:
     if uploaded_video is not None:
         st.video(uploaded_video)
         
-        # Analyse automatique
         with st.spinner("Traitement de la vidéo en cours... Cela peut prendre plusieurs minutes."):
             try:
                 model = get_model()
                 confidence_threshold = 0.25
                 
-                # Sauvegarder la vidéo
                 temp_dir = Path("temp_videos")
                 temp_dir.mkdir(exist_ok=True)
                 
@@ -157,7 +148,6 @@ with tab2:
                 with open(input_path, "wb") as f:
                     f.write(uploaded_video.getbuffer())
                 
-                # Traiter la vidéo
                 cap = cv2.VideoCapture(str(input_path))
                 
                 fps = int(cap.get(cv2.CAP_PROP_FPS))
@@ -196,8 +186,7 @@ with tab2:
                 cap.release()
                 out.release()
                 
-                # Afficher les résultats
-                st.success("✅ Traitement terminé!")
+                st.success("Traitement terminé!")
                 
                 col1, col2 = st.columns(2)
                 with col1:
@@ -208,28 +197,25 @@ with tab2:
                     avg_detections = round(total_detections / frame_count, 2) if frame_count > 0 else 0
                     st.metric("Détections/frame", avg_detections)
                 
-                st.markdown("### 📊 Statistiques par classe")
+                st.markdown("### Statistiques par classe")
                 for class_name, count in detection_stats.items():
                     st.write(f"**{class_name}:** {count}")
                 
-                # Afficher la vidéo annotée
-                st.markdown("### 🎬 Vidéo Annotée")
+                st.markdown("### Vidéo Annotée")
                 if output_path.exists():
                     with open(output_path, "rb") as video_file:
                         video_bytes = video_file.read()
                         st.video(video_bytes)
                 
-                # Nettoyer
                 input_path.unlink()
                 output_path.unlink()
                 
             except Exception as e:
-                st.error(f"❌ Erreur: {str(e)}")
+                st.error(f"Erreur: {str(e)}")
 
-# Tab 3: Webcam
 with tab3:
-    st.subheader("Capture depuis la webcam")
-    st.info("📸 Prenez une photo avec votre webcam pour l'analyser")
+    st.subheader("Capture avec votre appareil photo")
+    st.info("Sur mobile : utilisez l'appareil photo de votre téléphone\n\n ur ordinateur : utilisez votre webcam")
     
     camera_photo = st.camera_input("Prenez une photo")
     
@@ -252,11 +238,11 @@ with tab3:
                 col1, col2 = st.columns(2)
                 
                 with col1:
-                    st.markdown("### 📥 Photo Originale")
+                    st.markdown("### Photo Originale")
                     st.image(image, use_container_width=True)
                 
                 with col2:
-                    st.markdown("### 🎯 Résultats")
+                    st.markdown("### Résultats")
                     annotated_path = RESULTS_DIR / f"{prediction_id}_annotated.jpg"
                     if annotated_path.exists():
                         st.image(Image.open(annotated_path), use_container_width=True)
@@ -273,12 +259,11 @@ with tab3:
                     with metric_cols[idx]:
                         st.metric(class_name.replace("_", " ").title(), count)
                 
-                st.success("✅ Analyse terminée!")
+                st.success("Analyse terminée!")
                 
             except Exception as e:
-                st.error(f"❌ Erreur: {str(e)}")
+                st.error(f"Erreur: {str(e)}")
 
 # Footer
 st.markdown("---")
-st.caption("Développé avec par Gueye Tech | YOLOv8 Detection API")
-st.caption("[GitHub](https://github.com/Gueyetech)")
+st.caption("Développé avec par Gueye Tech | [GitHub](https://github.com/Gueyetech)")
