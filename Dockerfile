@@ -15,7 +15,7 @@ RUN pip install --no-cache-dir torch==2.0.1+cu118 torchvision==0.15.2+cu118 --ex
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copier le code
-COPY api.py .
+COPY main.py .
 COPY models/ models/
 
 # Créer dossiers nécessaires
