@@ -75,7 +75,7 @@ L'application Streamlit fonctionne parfaitement sur mobile :
 
 1. **Déployez l'application** sur Streamlit Cloud, Render, ou Heroku
 2. **Ouvrez l'URL** de votre application sur votre téléphone
-3. **Accédez à l'onglet "📸 Appareil Photo"**
+3. **Accédez à l'onglet " Appareil Photo"**
 4. **Autorisez l'accès** à l'appareil photo de votre téléphone
 5. **Prenez une photo** et l'analyse se fera automatiquement
 
