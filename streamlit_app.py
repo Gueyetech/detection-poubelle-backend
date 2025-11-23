@@ -7,6 +7,7 @@ from pathlib import Path
 import tempfile
 import base64
 import os
+import traceback
 
 from model import get_model, predict_image as predict_image_model
 
@@ -17,32 +18,15 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Créer les dossiers nécessaires
-# Utiliser les dossiers locaux s'ils existent, sinon utiliser le répertoire temporaire
-try:
-    UPLOAD_DIR = Path("uploads")
-    RESULTS_DIR = Path("results")
-    TEMP_VIDEO_DIR = Path("temp_videos")
-    
-    # Tenter de créer les dossiers
-    UPLOAD_DIR.mkdir(exist_ok=True)
-    RESULTS_DIR.mkdir(exist_ok=True)
-    TEMP_VIDEO_DIR.mkdir(exist_ok=True)
-    
-    # Vérifier les permissions d'écriture
-    test_file = UPLOAD_DIR / ".test"
-    test_file.touch()
-    test_file.unlink()
-except (PermissionError, OSError):
-    # Si les permissions sont refusées, utiliser le répertoire temporaire
-    TEMP_DIR = Path(tempfile.gettempdir()) / "detection_poubelle"
-    UPLOAD_DIR = TEMP_DIR / "uploads"
-    RESULTS_DIR = TEMP_DIR / "results"
-    TEMP_VIDEO_DIR = TEMP_DIR / "temp_videos"
-    
-    # Créer les dossiers avec permissions appropriées
-    for directory in [UPLOAD_DIR, RESULTS_DIR, TEMP_VIDEO_DIR]:
-        directory.mkdir(parents=True, exist_ok=True)
+# Utiliser toujours le répertoire temporaire pour la compatibilité cloud
+TEMP_DIR = Path(tempfile.gettempdir()) / "detection_poubelle"
+UPLOAD_DIR = TEMP_DIR / "uploads"
+RESULTS_DIR = TEMP_DIR / "results"
+TEMP_VIDEO_DIR = TEMP_DIR / "temp_videos"
+
+# Créer les dossiers
+for directory in [UPLOAD_DIR, RESULTS_DIR, TEMP_VIDEO_DIR]:
+    directory.mkdir(parents=True, exist_ok=True)
 
 # Titre principal
 st.title("Détection de Poubelles Pleines/Vides")
@@ -96,10 +80,11 @@ with tab1:
                 prediction_id = str(uuid.uuid4())
                 file_path = UPLOAD_DIR / f"{prediction_id}_{uploaded_file.name}"
                 
+                # Sauvegarder le fichier
                 with open(file_path, "wb") as f:
                     f.write(uploaded_file.getbuffer())
                 
-                
+                # Prédiction
                 result = predict_image_model(str(file_path), str(RESULTS_DIR), prediction_id)
                 
                 with col2:
@@ -108,6 +93,8 @@ with tab1:
                     if annotated_path.exists():
                         annotated_image = Image.open(annotated_path)
                         st.image(annotated_image, use_container_width=True)
+                    else:
+                        st.warning("Image annotée non trouvée")
                 
                 st.markdown("---")
                 st.subheader(" Statistiques")
@@ -142,7 +129,9 @@ with tab1:
                 st.success("Analyse terminée avec succès!")
                 
             except Exception as e:
-                st.error(f"Erreur lors de l'analyse: {str(e)}")
+                st.error(f"❌ Erreur lors de l'analyse: {str(e)}")
+                with st.expander("Détails de l'erreur"):
+                    st.code(traceback.format_exc())
 
 # Tab 2: Upload de vidéo
 with tab2:
