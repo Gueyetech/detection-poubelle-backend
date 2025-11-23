@@ -73,17 +73,28 @@ with tab1:
         image = Image.open(uploaded_file)
         st.session_state.original_image = image
         
+        # Créer les colonnes pour affichage
         col1, col2 = st.columns(2)
         
         with col1:
             st.markdown("###  Image Originale")
             st.image(image, use_container_width=True)
         
+        with col2:
+            st.markdown("###  Résultats de Détection")
+            if st.session_state.image_result is not None and st.session_state.image_annotated_path:
+                if st.session_state.image_annotated_path.exists():
+                    annotated_image = Image.open(st.session_state.image_annotated_path)
+                    st.image(annotated_image, use_container_width=True)
+            else:
+                st.info("Cliquez sur 'Analyser' pour détecter les poubelles")
+        
         # Bouton d'analyse
+        st.markdown("---")
         analyze_button = st.button(" Analyser l'image", key="analyze_image", type="primary", use_container_width=True)
         
         if analyze_button:
-            with st.spinner("Analyse en cours..."):
+            with st.spinner(" Analyse en cours..."):
                 try:
                     import uuid
                     prediction_id = str(uuid.uuid4())
@@ -91,7 +102,6 @@ with tab1:
                     
                     with open(file_path, "wb") as f:
                         f.write(uploaded_file.getbuffer())
-                    
                     
                     result = predict_image_model(str(file_path), str(RESULTS_DIR), prediction_id)
                     annotated_path = RESULTS_DIR / f"{prediction_id}_annotated.jpg"
@@ -106,14 +116,8 @@ with tab1:
                 except Exception as e:
                     st.error(f"Erreur lors de l'analyse: {str(e)}")
         
-        # Afficher les résultats s'ils existent
+        # Afficher les statistiques si l'analyse a été faite
         if st.session_state.image_result is not None:
-            with col2:
-                st.markdown("###  Résultats de Détection")
-                if st.session_state.image_annotated_path and st.session_state.image_annotated_path.exists():
-                    annotated_image = Image.open(st.session_state.image_annotated_path)
-                    st.image(annotated_image, use_container_width=True)
-            
             st.markdown("---")
             st.subheader(" Statistiques")
             
@@ -133,7 +137,7 @@ with tab1:
             
             # Détails des détections
             if st.session_state.image_result["detections"]:
-                st.markdown("###  Détails des Détections")
+                st.markdown("### Détails des Détections")
                 for i, detection in enumerate(st.session_state.image_result["detections"], 1):
                     class_name = detection["class"]
                     confidence = detection["confidence"]
@@ -259,7 +263,23 @@ with tab3:
         image = Image.open(camera_photo)
         st.session_state.camera_original_image = image
         
+        # Créer les colonnes pour affichage
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("###  Photo Originale")
+            st.image(image, use_container_width=True)
+        
+        with col2:
+            st.markdown("###  Résultats de Détection")
+            if st.session_state.camera_result is not None and st.session_state.camera_annotated_path:
+                if st.session_state.camera_annotated_path.exists():
+                    st.image(Image.open(st.session_state.camera_annotated_path), use_container_width=True)
+            else:
+                st.info("Cliquez sur 'Analyser' pour détecter les poubelles")
+        
         # Bouton d'analyse
+        st.markdown("---")
         analyze_camera_button = st.button(" Analyser la photo", key="analyze_camera", type="primary", use_container_width=True)
         
         if analyze_camera_button:
@@ -286,21 +306,11 @@ with tab3:
                 except Exception as e:
                     st.error(f"Erreur: {str(e)}")
         
-        # Afficher les résultats s'ils existent
+        # Afficher les statistiques si l'analyse a été faite
         if st.session_state.camera_result is not None:
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.markdown("### Photo Originale")
-                st.image(st.session_state.camera_original_image, use_container_width=True)
-            
-            with col2:
-                st.markdown("### Résultats")
-                if st.session_state.camera_annotated_path and st.session_state.camera_annotated_path.exists():
-                    st.image(Image.open(st.session_state.camera_annotated_path), use_container_width=True)
-            
-            # Statistiques
             st.markdown("---")
+            st.subheader("Statistiques")
+            
             summary = st.session_state.camera_result["summary"]
             
             metric_cols = st.columns(len(summary["class_counts"]) + 1)
@@ -313,7 +323,7 @@ with tab3:
             
             # Détails des détections
             if st.session_state.camera_result["detections"]:
-                st.markdown("###  Détails des Détections")
+                st.markdown("### Détails des Détections")
                 for i, detection in enumerate(st.session_state.camera_result["detections"], 1):
                     class_name = detection["class"]
                     confidence = detection["confidence"]
