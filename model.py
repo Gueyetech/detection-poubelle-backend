@@ -3,17 +3,33 @@ from pathlib import Path
 import urllib.request
 import os
 import cv2
+import tempfile
 from typing import Dict, List
 
 # Configuration
 MODEL_URL = "https://github.com/Gueyetech/train_detection_poubelle_plein_vide/raw/main/runs/detect/poubelle_pleine_vide7/weights/best.pt"
-MODEL_PATH = Path("best.pt")
+# Utiliser le répertoire temporaire pour le modèle
+MODEL_DIR = Path(tempfile.gettempdir()) / "detection_poubelle_models"
+MODEL_DIR.mkdir(parents=True, exist_ok=True)
+MODEL_PATH = MODEL_DIR / "best.pt"
 
 # Variable globale pour le modèle (lazy loading)
 _model = None
 
 def download_model():
     """Télécharge le modèle s'il n'existe pas"""
+    # Vérifier d'abord si le modèle existe localement (dans le repo)
+    local_model = Path("best.pt")
+    if local_model.exists():
+        print(f"Utilisation du modèle local: {local_model}")
+        # Copier vers le répertoire temporaire si nécessaire
+        if not MODEL_PATH.exists():
+            import shutil
+            shutil.copy(local_model, MODEL_PATH)
+            print(f"Modèle copié vers {MODEL_PATH}")
+        return
+    
+    # Sinon, télécharger depuis GitHub
     if not MODEL_PATH.exists():
         print(f"Téléchargement du modèle depuis {MODEL_URL}...")
         try:

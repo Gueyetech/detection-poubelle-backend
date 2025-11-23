@@ -6,6 +6,7 @@ import io
 from pathlib import Path
 import tempfile
 import base64
+import os
 
 from model import get_model, predict_image as predict_image_model
 
@@ -17,10 +18,31 @@ st.set_page_config(
 )
 
 # Créer les dossiers nécessaires
-UPLOAD_DIR = Path("uploads")
-RESULTS_DIR = Path("results")
-UPLOAD_DIR.mkdir(exist_ok=True)
-RESULTS_DIR.mkdir(exist_ok=True)
+# Utiliser les dossiers locaux s'ils existent, sinon utiliser le répertoire temporaire
+try:
+    UPLOAD_DIR = Path("uploads")
+    RESULTS_DIR = Path("results")
+    TEMP_VIDEO_DIR = Path("temp_videos")
+    
+    # Tenter de créer les dossiers
+    UPLOAD_DIR.mkdir(exist_ok=True)
+    RESULTS_DIR.mkdir(exist_ok=True)
+    TEMP_VIDEO_DIR.mkdir(exist_ok=True)
+    
+    # Vérifier les permissions d'écriture
+    test_file = UPLOAD_DIR / ".test"
+    test_file.touch()
+    test_file.unlink()
+except (PermissionError, OSError):
+    # Si les permissions sont refusées, utiliser le répertoire temporaire
+    TEMP_DIR = Path(tempfile.gettempdir()) / "detection_poubelle"
+    UPLOAD_DIR = TEMP_DIR / "uploads"
+    RESULTS_DIR = TEMP_DIR / "results"
+    TEMP_VIDEO_DIR = TEMP_DIR / "temp_videos"
+    
+    # Créer les dossiers avec permissions appropriées
+    for directory in [UPLOAD_DIR, RESULTS_DIR, TEMP_VIDEO_DIR]:
+        directory.mkdir(parents=True, exist_ok=True)
 
 # Titre principal
 st.title("Détection de Poubelles Pleines/Vides")
@@ -141,10 +163,7 @@ with tab2:
                 model = get_model()
                 confidence_threshold = 0.25
                 
-                temp_dir = Path("temp_videos")
-                temp_dir.mkdir(exist_ok=True)
-                
-                input_path = temp_dir / uploaded_video.name
+                input_path = TEMP_VIDEO_DIR / uploaded_video.name
                 with open(input_path, "wb") as f:
                     f.write(uploaded_video.getbuffer())
                 
@@ -155,7 +174,7 @@ with tab2:
                 height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
                 total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
                 
-                output_path = temp_dir / f"output_{uploaded_video.name}"
+                output_path = TEMP_VIDEO_DIR / f"output_{uploaded_video.name}"
                 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
                 out = cv2.VideoWriter(str(output_path), fourcc, fps, (width, height))
                 

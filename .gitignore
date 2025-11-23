@@ -26,9 +26,13 @@ env/
 .DS_Store
 Thumbs.db
 
-# Uploads et résultats (ne pas committer)
-uploads/
-results/
+# Uploads et résultats (ne pas committer les fichiers, seulement le dossier)
+uploads/*
+!uploads/.gitkeep
+results/*
+!results/.gitkeep
+temp_videos/*
+!temp_videos/.gitkeep
 
 # Modèle (commenté pour permettre le push)
 # best.pt
