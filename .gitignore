@@ -30,8 +30,8 @@ Thumbs.db
 uploads/
 results/
 
-# Modèle (sera téléchargé automatiquement)
-best.pt
+# Modèle (commenté pour permettre le push)
+# best.pt
 
 # Logs
 *.log
