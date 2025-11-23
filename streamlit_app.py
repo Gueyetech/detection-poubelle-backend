@@ -49,7 +49,7 @@ with st.sidebar:
     except Exception as e:
         st.error(f"Erreur: {str(e)}")
 
-tab1, tab2, tab3 = st.tabs([" Image", " Vidéo", " Appareil Photo"])
+tab1, tab2, tab3 = st.tabs(["Image", "Vidéo", "Appareil Photo"])
 
 # Initialiser session state pour l'onglet Image
 if 'image_result' not in st.session_state:
@@ -58,6 +58,8 @@ if 'image_annotated_path' not in st.session_state:
     st.session_state.image_annotated_path = None
 if 'original_image' not in st.session_state:
     st.session_state.original_image = None
+if 'uploaded_file_id' not in st.session_state:
+    st.session_state.uploaded_file_id = None
 
 with tab1:
     st.subheader("Téléchargez une image")
@@ -65,23 +67,33 @@ with tab1:
     uploaded_file = st.file_uploader(
         "Choisissez une image...",
         type=["jpg", "jpeg", "png", "bmp"],
-        help="Formats supportés: JPG, PNG, BMP"
+        help="Formats supportés: JPG, PNG, BMP",
+        key="image_uploader"
     )
     
+    # Vérifier si un nouveau fichier a été uploadé
     if uploaded_file is not None:
-        # Sauvegarder l'image originale
-        image = Image.open(uploaded_file)
-        st.session_state.original_image = image
+        file_id = uploaded_file.file_id if hasattr(uploaded_file, 'file_id') else uploaded_file.name
+        
+        # Si c'est un nouveau fichier, réinitialiser les résultats
+        if file_id != st.session_state.uploaded_file_id:
+            st.session_state.uploaded_file_id = file_id
+            st.session_state.image_result = None
+            st.session_state.image_annotated_path = None
+            # Convertir et sauvegarder l'image
+            image = Image.open(uploaded_file)
+            st.session_state.original_image = image.copy()
         
         # Créer les colonnes pour affichage
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("###  Image Originale")
-            st.image(image, use_container_width=True)
+            st.markdown("### Image Originale")
+            if st.session_state.original_image is not None:
+                st.image(st.session_state.original_image, use_container_width=True)
         
         with col2:
-            st.markdown("###  Résultats de Détection")
+            st.markdown("### Résultats de Détection")
             if st.session_state.image_result is not None and st.session_state.image_annotated_path:
                 if st.session_state.image_annotated_path.exists():
                     annotated_image = Image.open(st.session_state.image_annotated_path)
@@ -91,17 +103,17 @@ with tab1:
         
         # Bouton d'analyse
         st.markdown("---")
-        analyze_button = st.button(" Analyser l'image", key="analyze_image", type="primary", use_container_width=True)
+        analyze_button = st.button("🔍 Analyser l'image", key="analyze_image", type="primary", use_container_width=True)
         
         if analyze_button:
             with st.spinner(" Analyse en cours..."):
                 try:
                     import uuid
                     prediction_id = str(uuid.uuid4())
-                    file_path = UPLOAD_DIR / f"{prediction_id}_{uploaded_file.name}"
                     
-                    with open(file_path, "wb") as f:
-                        f.write(uploaded_file.getbuffer())
+                    # Sauvegarder l'image depuis session_state
+                    file_path = UPLOAD_DIR / f"{prediction_id}_{uploaded_file.name}"
+                    st.session_state.original_image.save(file_path)
                     
                     result = predict_image_model(str(file_path), str(RESULTS_DIR), prediction_id)
                     annotated_path = RESULTS_DIR / f"{prediction_id}_annotated.jpg"
@@ -119,7 +131,7 @@ with tab1:
         # Afficher les statistiques si l'analyse a été faite
         if st.session_state.image_result is not None:
             st.markdown("---")
-            st.subheader(" Statistiques")
+            st.subheader("Statistiques")
             
             summary = st.session_state.image_result["summary"]
             
@@ -149,6 +161,7 @@ with tab1:
                         st.write(f"**Coordonnées:** [{bbox[0]:.0f}, {bbox[1]:.0f}, {bbox[2]:.0f}, {bbox[3]:.0f}]")
     else:
         # Réinitialiser session state si pas de fichier
+        st.session_state.uploaded_file_id = None
         st.session_state.image_result = None
         st.session_state.image_annotated_path = None
         st.session_state.original_image = None
@@ -253,8 +266,8 @@ if 'camera_original_image' not in st.session_state:
     st.session_state.camera_original_image = None
 
 with tab3:
-    st.subheader(" Capture avec votre appareil photo")
-    st.info(" Sur mobile : utilisez l'appareil photo de votre téléphone\n\n Sur ordinateur : utilisez votre webcam")
+    st.subheader("Capture avec votre appareil photo")
+    st.info("Sur mobile : utilisez l'appareil photo de votre téléphone\n\nSur ordinateur : utilisez votre webcam")
     
     camera_photo = st.camera_input("Prenez une photo")
     
@@ -267,11 +280,11 @@ with tab3:
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("###  Photo Originale")
+            st.markdown("### Photo Originale")
             st.image(image, use_container_width=True)
         
         with col2:
-            st.markdown("###  Résultats de Détection")
+            st.markdown("### Résultats de Détection")
             if st.session_state.camera_result is not None and st.session_state.camera_annotated_path:
                 if st.session_state.camera_annotated_path.exists():
                     st.image(Image.open(st.session_state.camera_annotated_path), use_container_width=True)
