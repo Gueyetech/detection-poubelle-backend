@@ -23,43 +23,8 @@ RESULTS_DIR = Path("results")
 UPLOAD_DIR.mkdir(exist_ok=True)
 RESULTS_DIR.mkdir(exist_ok=True)
 
-# Style CSS personnalisé
-st.markdown("""
-    <style>
-    .main-header {
-        font-size: 3rem;
-        color: #667eea;
-        text-align: center;
-        margin-bottom: 2rem;
-    }
-    .stButton>button {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        padding: 0.5rem 2rem;
-        font-size: 1rem;
-        border-radius: 5px;
-        cursor: pointer;
-    }
-    .detection-card {
-        background: #f8f9fa;
-        padding: 1rem;
-        border-radius: 10px;
-        margin: 0.5rem 0;
-    }
-    .poubelle_pleine {
-        color: #e74c3c;
-        font-weight: bold;
-    }
-    .poubelle_vide {
-        color: #27ae60;
-        font-weight: bold;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
 # Titre principal
-st.markdown('<h1 class="main-header">🗑️ Détection de Poubelles Pleines/Vides</h1>', unsafe_allow_html=True)
+st.title("🗑️ Détection de Poubelles Pleines/Vides")
 
 # Sidebar
 with st.sidebar:
@@ -163,16 +128,10 @@ with tab1:
                             confidence = detection["confidence"]
                             bbox = detection["bbox"]
                             
-                            color_class = "poubelle_pleine" if "pleine" in class_name else "poubelle_vide"
-                            
-                            st.markdown(f"""
-                            <div class="detection-card">
-                                <strong>Détection #{i}</strong><br>
-                                Classe: <span class="{color_class}">{class_name}</span><br>
-                                Confiance: {confidence:.1%}<br>
-                                Coordonnées: [{bbox[0]:.0f}, {bbox[1]:.0f}, {bbox[2]:.0f}, {bbox[3]:.0f}]
-                            </div>
-                            """, unsafe_allow_html=True)
+                            with st.expander(f"Détection #{i} - {class_name} ({confidence:.1%})"):
+                                st.write(f"**Classe:** {class_name}")
+                                st.write(f"**Confiance:** {confidence:.1%}")
+                                st.write(f"**Coordonnées:** [{bbox[0]:.0f}, {bbox[1]:.0f}, {bbox[2]:.0f}, {bbox[3]:.0f}]")
                     
                     st.success("✅ Analyse terminée avec succès!")
                     
@@ -329,9 +288,5 @@ with tab3:
 
 # Footer
 st.markdown("---")
-st.markdown("""
-    <div style="text-align: center; color: #666;">
-        <p>Développé avec par Gueye Tech | YOLOv8 Detection API</p>
-        <p><a href="https://github.com/Gueyetech" target="_blank">GitHub</a></p>
-    </div>
-""", unsafe_allow_html=True)
+st.caption("Développé avec ❤️ par Gueye Tech | YOLOv8 Detection API")
+st.caption("[GitHub](https://github.com/Gueyetech)")
