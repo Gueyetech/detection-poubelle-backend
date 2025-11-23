@@ -56,8 +56,8 @@ if 'image_result' not in st.session_state:
     st.session_state.image_result = None
 if 'image_annotated_path' not in st.session_state:
     st.session_state.image_annotated_path = None
-if 'original_image' not in st.session_state:
-    st.session_state.original_image = None
+if 'original_image_bytes' not in st.session_state:
+    st.session_state.original_image_bytes = None
 if 'uploaded_file_id' not in st.session_state:
     st.session_state.uploaded_file_id = None
 
@@ -80,17 +80,16 @@ with tab1:
             st.session_state.uploaded_file_id = file_id
             st.session_state.image_result = None
             st.session_state.image_annotated_path = None
-            # Convertir et sauvegarder l'image
-            image = Image.open(uploaded_file)
-            st.session_state.original_image = image.copy()
+            # Convertir l'image en bytes pour la session_state
+            st.session_state.original_image_bytes = uploaded_file.getvalue()
         
         # Créer les colonnes pour affichage
         col1, col2 = st.columns(2)
         
         with col1:
             st.markdown("### Image Originale")
-            if st.session_state.original_image is not None:
-                st.image(st.session_state.original_image, use_container_width=True)
+            if st.session_state.original_image_bytes is not None:
+                st.image(st.session_state.original_image_bytes, use_container_width=True)
         
         with col2:
             st.markdown("### Résultats de Détection")
@@ -103,17 +102,18 @@ with tab1:
         
         # Bouton d'analyse
         st.markdown("---")
-        analyze_button = st.button("🔍 Analyser l'image", key="analyze_image", type="primary", use_container_width=True)
+        analyze_button = st.button("Analyser l'image", key="analyze_image", type="primary", use_container_width=True)
         
         if analyze_button:
-            with st.spinner(" Analyse en cours..."):
+            with st.spinner("Analyse en cours..."):
                 try:
                     import uuid
                     prediction_id = str(uuid.uuid4())
                     
-                    # Sauvegarder l'image depuis session_state
+                    # Sauvegarder l'image depuis bytes
                     file_path = UPLOAD_DIR / f"{prediction_id}_{uploaded_file.name}"
-                    st.session_state.original_image.save(file_path)
+                    with open(file_path, "wb") as f:
+                        f.write(st.session_state.original_image_bytes)
                     
                     result = predict_image_model(str(file_path), str(RESULTS_DIR), prediction_id)
                     annotated_path = RESULTS_DIR / f"{prediction_id}_annotated.jpg"
@@ -164,7 +164,7 @@ with tab1:
         st.session_state.uploaded_file_id = None
         st.session_state.image_result = None
         st.session_state.image_annotated_path = None
-        st.session_state.original_image = None
+        st.session_state.original_image_bytes = None
 
 # Tab 2: Upload de vidéo
 with tab2:
