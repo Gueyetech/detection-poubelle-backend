@@ -1,3 +1,4 @@
+
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
@@ -64,7 +65,7 @@ async def root():
 @app.get("/api/health", tags=["Info"], summary="Vérification de l'état de santé")
 async def health_check():
 	"""
-	Vérifie l'état de santé de l'API et du modèle YOLO.
+	Vérifie l'état de santé de l'API et du modèle YOLO. 
 	
 	Retourne:
 	- **status**: 'healthy' si le modèle est chargé, 'unhealthy' sinon
