@@ -124,7 +124,7 @@ docker run -p 8501:8501 detection-poubelle
 
 ## Technologies utilisées
 
-- **YOLOv8s* : Modèle de détection d'objets
+- **YOLOv8s** : Modèle de détection d'objets
 - **Streamlit** : Interface web interactive
 - **FastAPI** : API REST haute performance
 - **OpenCV** : Traitement d'images et vidéos
